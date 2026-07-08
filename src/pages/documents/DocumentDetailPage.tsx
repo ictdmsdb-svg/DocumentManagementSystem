@@ -86,7 +86,7 @@ export default function DocumentDetailPage() {
           current_version:document_versions!documents_current_version_id_fkey(*)
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (docError) throw docError;
 

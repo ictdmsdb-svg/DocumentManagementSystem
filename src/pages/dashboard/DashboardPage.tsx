@@ -37,9 +37,16 @@ interface DashboardStats {
   checkedOut: number;
 }
 
+interface CurrentVersion {
+  file_name: string | null;
+  file_extension: string | null;
+  mime_type: string | null;
+  file_size: number | null;
+}
+
 interface RecentDocument extends Document {
-  current_version?: DocumentVersion;
-  profiles?: Profile;
+  current_version?: CurrentVersion;
+  creator?: Profile;
 }
 
 export default function DashboardPage() {
@@ -104,13 +111,13 @@ export default function DashboardPage() {
         .from('documents')
         .select(`
           *,
-          current_version:document_versions(
+          current_version:document_versions!documents_current_version_id_fkey(
             file_name,
             file_extension,
             mime_type,
             file_size
           ),
-          profiles:created_by(id, full_name, email)
+          creator:profiles!documents_created_by_fkey(id, full_name, email)
         `)
         .eq('is_archived', false)
         .order('created_at', { ascending: false })
@@ -123,13 +130,13 @@ export default function DashboardPage() {
         .from('documents')
         .select(`
           *,
-          current_version:document_versions(
+          current_version:document_versions!documents_current_version_id_fkey(
             file_name,
             file_extension,
             mime_type,
             file_size
           ),
-          profiles:created_by(id, full_name, email)
+          creator:profiles!documents_created_by_fkey(id, full_name, email)
         `)
         .not('checked_out_by', 'is', null)
         .eq('is_archived', false)
@@ -386,7 +393,7 @@ export default function DashboardPage() {
                     <TableRow key={doc.id}>
                       <TableCell className="font-medium">{doc.title}</TableCell>
                       <TableCell className="text-sm">
-                        {doc.profiles?.full_name || '-'}
+                        {doc.creator?.full_name || '-'}
                       </TableCell>
                       <TableCell className="text-sm">
                         {doc.checked_out_at ? formatRelativeTime(doc.checked_out_at) : '-'}

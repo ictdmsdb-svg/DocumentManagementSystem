@@ -136,17 +136,6 @@ export default function AdminPermissionsPage() {
 
       if (error) throw error;
 
-      // Log audit
-      await supabase.from('audit_logs').insert([{
-        action: 'permission_grant',
-        document_id: selectedDocument.id,
-        result: 'success',
-        details: {
-          user_id: selectedUserId,
-          permissions: selectedPermissions,
-        },
-      }]);
-
       toast.toast({ title: THAI_LABELS.save_success });
       loadPermissionsForDocument(selectedDocument.id);
       setSelectedUserId('');

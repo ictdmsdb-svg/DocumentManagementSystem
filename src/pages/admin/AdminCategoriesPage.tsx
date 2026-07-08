@@ -148,7 +148,7 @@ export default function AdminCategoriesPage() {
         if (error) throw error;
         toast({ title: THAI_LABELS.save_success });
       } else {
-        const { error } = await supabase.from('categories').insert([payload]);
+        const { error } = await supabase.from('categories').insert(payload);
         if (error) throw error;
         toast({ title: THAI_LABELS.upload_success.replace('อัปโหลด', 'สร้าง') });
       }
