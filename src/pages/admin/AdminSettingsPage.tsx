@@ -8,6 +8,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import { THAI_LABELS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +38,7 @@ interface AppSettings {
 
 export default function AdminSettingsPage() {
   const toast = useToast();
+  const { session } = useAuth();
   const { settings, refreshSettings } = useApp();
 
   const [loading, setLoading] = useState(true);
@@ -58,8 +60,13 @@ export default function AdminSettingsPage() {
 
   useEffect(() => {
     loadSettings();
-    checkGoogleDriveStatus();
   }, []);
+
+  useEffect(() => {
+    if (session) {
+      checkGoogleDriveStatus();
+    }
+  }, [session]);
 
   useEffect(() => {
     if (settings) {
@@ -81,11 +88,21 @@ export default function AdminSettingsPage() {
   const checkGoogleDriveStatus = async () => {
     setGdriveStatus('checking');
     try {
+      // Wait for session to be ready
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!currentSession) {
+        setGdriveStatus('not_configured');
+        return;
+      }
+
       const { error } = await supabase.functions.invoke('google-drive-upload', {
-        method: 'POST',
         body: { _probe: true },
       });
       if (error?.message?.includes('not configured')) {
+        setGdriveStatus('not_configured');
+      } else if (error) {
+        // If there's any other error, still consider it not configured
+        // This handles network errors, auth errors, etc.
         setGdriveStatus('not_configured');
       } else {
         setGdriveStatus('configured');
